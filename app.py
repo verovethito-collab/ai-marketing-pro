@@ -45,6 +45,13 @@ Target Audience: {target_audience}
 Tone: {tone}
 """
 
+st.markdown("---")
+st.subheader("📩 Get More Marketing Ideas")
+user_email = st.text_input("Enter your email (optional)")
+
+if "usage_count" not in st.session_state:
+    st.session_state.usage_count = 0
+
 def generate_content(prompt):
     try:
         response = requests.post(
@@ -113,13 +120,23 @@ Write a high-converting advertisement:
 
     return prompt
 
+if st.session_state.usage_count >= 3:
+    st.warning("🚀 Free limit reached! Contact for unlimited access.")
+    st.stop()
+
 if st.button("Generate ✨"):
     if not business_name or not target_audience:
         st.error("Please fill all required fields!")
     else:
+        if user_email:
+            with open("leads.txt", "a") as f:
+                f.write(user_email + "\n")
+
         with st.spinner("Generating content..."):
             prompt = build_prompt(business_description, content_type, tone)
             output = generate_content(prompt)
+
+            st.session_state.usage_count += 1
 
             st.markdown("---")
             st.subheader("📢 Generated Content")
@@ -156,6 +173,29 @@ Make them catchy and realistic for Indian customers.
                 )
             except:
                 st.warning("PDF generation failed, but content is available above!")
+
+st.markdown("---")
+
+st.subheader("💼 Want Unlimited Content?")
+st.markdown("""
+- Unlimited generations  
+- Higher quality outputs  
+- Custom marketing strategies  
+
+📩 Contact: yourname@example.com  
+💰 ₹199/month (limited offer)
+""")
+
+st.subheader("🔥 Done-For-You Marketing")
+st.markdown("""
+We create complete marketing for your business:
+
+- Instagram content  
+- Ads & campaigns  
+- WhatsApp promotions  
+
+📩 DM or Email to get started
+""")
 
 st.markdown("---")
 st.info("🚀 Coming soon: Content calendar, auto-posting, and viral analytics")
