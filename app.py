@@ -57,7 +57,7 @@ if st.button("Generate ✨"):
             output = generate_content(business_description, content_type)
             st.markdown("---")
             st.write(output)
-try:
+            try:
                 pdf = FPDF()
                 pdf.add_page()
                 pdf.set_font("Arial", size=12)
@@ -73,5 +73,6 @@ try:
                     file_name="marketing_copy.pdf",
                     mime="application/pdf"
                 )
-    except Exception as pdf_err:
+            except Exception as pdf_err:
                 st.warning("PDF could not be generated, but you can still copy the text above!")
+## Final Reminder
