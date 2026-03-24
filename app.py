@@ -182,7 +182,7 @@ st.markdown("""
 - Higher quality outputs  
 - Custom marketing strategies  
 
-📩 Contact: yourname@example.com  
+📩 Contact: verovethito@gmail.com  
 💰 ₹199/month (limited offer)
 """)
 
