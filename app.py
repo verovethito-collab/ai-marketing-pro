@@ -13,7 +13,6 @@ with st.sidebar:
 API_KEY = st.secrets["GROQ_API_KEY"]
 def generate_content(business, choice):
     prompts = {
-        prompts = {
     "Instagram": f"""
 You are an expert social media marketer.
 
