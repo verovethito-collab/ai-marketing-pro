@@ -5,7 +5,17 @@ with st.sidebar:
     st.title("🛠️ AI Marketing Hub")
     st.info("This tool uses Llama 3.3 to generate high-converting copy in seconds.")
     st.markdown("---")
-    st.subheader("Need a custom AI tool?")
+    st.subheader("🔥 Promotional Offer Ideas")
+
+offer_prompt = f"""
+Generate 3 limited-time offers for this business:
+{business_description}
+
+Make them catchy and realistic for Indian customers.
+"""
+
+offers = generate_content(business_description, "Ad Copy")
+st.write(offers)
     st.markdown("[📧 Contact the Developer](mailto:yourname@example.com)")
     st.markdown("---")
     st.write("🙏 If this helped you, consider supporting:")
