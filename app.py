@@ -53,7 +53,6 @@ Write a high-converting ad copy for:
 - Problem + solution
 - Strong CTA
 """
-}
     }
     
     prompt = prompts.get(choice)
