@@ -73,3 +73,5 @@ try:
                     file_name="marketing_copy.pdf",
                     mime="application/pdf"
                 )
+    except Exception as pdf_err:
+                st.warning("PDF could not be generated, but you can still copy the text above!")
