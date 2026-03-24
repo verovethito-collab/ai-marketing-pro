@@ -11,12 +11,61 @@ with st.sidebar:
 
 st.set_page_config(page_title="AI Marketing Pro", layout="centered")
 
-# Header
+# API + DB
+API_KEY = st.secrets["GROQ_API_KEY"]
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# ---------------- AUTH SYSTEM ----------------
+
+auth_mode = st.sidebar.selectbox("Choose Mode", ["Login", "Sign Up"])
+
+email = st.sidebar.text_input("Email")
+password = st.sidebar.text_input("Password", type="password")
+
+user = None
+
+if auth_mode == "Sign Up":
+    if st.sidebar.button("Create Account"):
+        res = supabase.auth.sign_up({
+            "email": email,
+            "password": password
+        })
+        if res.user:
+            st.sidebar.success("Account created! Please login.")
+        else:
+            st.sidebar.error("Signup failed")
+
+elif auth_mode == "Login":
+    if st.sidebar.button("Login"):
+        res = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+        if res.user:
+            st.session_state["user"] = res.user
+            st.sidebar.success("Logged in!")
+        else:
+            st.sidebar.error("Login failed")
+
+# Keep session
+if "user" in st.session_state:
+    user = st.session_state["user"]
+
+# Logout
+if user:
+    if st.sidebar.button("Logout"):
+        st.session_state.pop("user")
+        st.rerun()
+
+# ---------------- UI ----------------
+
 st.title("🚀 AI Marketing for Local Businesses")
 st.caption("Get Instagram posts, WhatsApp promos & offers in seconds")
 st.markdown("---")
 
-# Example
 st.subheader("💡 Example Output")
 st.code("""
 🔥 Get Fit This Summer at Iron Pulse Gym!
@@ -28,17 +77,14 @@ Limited offer: 20% OFF for first 50 members!
 📩 DM us today!
 """)
 
-# Demo button
 if st.button("Try Demo"):
     st.session_state.business_name = "Iron Pulse Gym"
     st.session_state.target_audience = "Young professionals"
 
-# API + DB
-API_KEY = st.secrets["GROQ_API_KEY"]
-SUPABASE_URL = st.secrets["SUPABASE_URL"]
-SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Require login
+if not user:
+    st.warning("Please login to use the app")
+    st.stop()
 
 # Inputs
 st.subheader("📌 Enter Business Details")
@@ -66,10 +112,8 @@ Target Audience: {target_audience}
 Tone: {tone}
 """
 
-st.markdown("---")
-user_email = st.text_input("Enter your email (required)")
+# ---------------- DB ----------------
 
-# DB function (FIXED)
 def get_or_create_user(email):
     response = supabase.table("users").select("*").eq("email", email).execute()
 
@@ -79,12 +123,13 @@ def get_or_create_user(email):
         new_user = {
             "email": email,
             "usage_count": 0,
-            "last_used": datetime.datetime.utcnow().isoformat()
+            "last_used": datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         }
         insert = supabase.table("users").insert(new_user).execute()
         return insert.data[0]
 
-# AI function
+# ---------------- AI ----------------
+
 def generate_content(prompt):
     try:
         response = requests.post(
@@ -95,7 +140,7 @@ def generate_content(prompt):
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are an elite Digital Marketing Strategist. Your copy is high-converting, engaging, and persuasive."
+                        "content": "You are an elite Digital Marketing Strategist."
                     },
                     {"role": "user", "content": prompt}
                 ],
@@ -108,63 +153,34 @@ def generate_content(prompt):
     except Exception as e:
         return f"Error: {e}"
 
-# Prompt builder
 def build_prompt(business, content_type, tone):
-    base = f"""
-Business Details:
-{business}
-"""
+    base = f"Business Details:\n{business}\n"
 
     if content_type == "Instagram":
-        prompt = base + """
-Generate 3 high-converting Instagram captions:
-- Use emojis
-- Add strong call-to-action
-- Make it engaging and trendy
-- Keep Indian audience in mind
-"""
-
+        prompt = base + "Generate 3 engaging Instagram captions with emojis and CTA."
     elif content_type == "WhatsApp":
-        prompt = base + """
-Write a short WhatsApp promotional message:
-- Friendly and personal tone
-- Create urgency
-- Add CTA
-"""
-
+        prompt = base + "Write a short WhatsApp promo message with urgency."
     elif content_type == "Email":
-        prompt = base + """
-Write a professional marketing email:
-- Include subject line
-- Clear value proposition
-- Persuasive CTA
-"""
-
-    elif content_type == "Ad Copy":
-        prompt = base + """
-Write a high-converting advertisement:
-- Strong hook
-- Problem + solution
-- Emotional trigger
-- Clear CTA
-"""
+        prompt = base + "Write a marketing email with subject and CTA."
+    else:
+        prompt = base + "Write a high-converting ad copy."
 
     if tone == "Local Hinglish":
-        prompt += "\nUse Hinglish (mix Hindi + English) naturally."
+        prompt += "\nUse Hinglish."
 
     return prompt
 
-# Generate
+# ---------------- GENERATE ----------------
+
 if st.button("Generate ✨"):
     if not business_name or not target_audience:
-        st.error("Please fill all required fields!")
-    elif not user_email:
-        st.error("Email is required!")
+        st.error("Fill all fields")
     else:
-        user = get_or_create_user(user_email)
+        user_email = user.email
+        user_data = get_or_create_user(user_email)
 
-        usage = user["usage_count"]
-        last_used = user.get("last_used")
+        usage = user_data["usage_count"]
+        last_used = user_data.get("last_used")
 
         now = datetime.datetime.utcnow()
 
@@ -177,56 +193,39 @@ if st.button("Generate ✨"):
 
         if usage >= 3 and time_diff < 5 * 60 * 60:
             remaining = int((5 * 60 * 60 - time_diff) / 60)
-            st.warning(f"🚀 Limit reached! Come back in {remaining} minutes.")
+            st.warning(f"Limit reached. Come back in {remaining} minutes.")
             st.stop()
 
         if time_diff >= 5 * 60 * 60:
             usage = 0
 
-        with st.spinner("Generating content..."):
+        with st.spinner("Generating..."):
             prompt = build_prompt(business_description, content_type, tone)
             output = generate_content(prompt)
 
             supabase.table("users").update({
                 "usage_count": usage + 1,
-                "last_used": now.isoformat()
+                "last_used": now.replace(tzinfo=datetime.timezone.utc).isoformat()
             }).eq("email", user_email).execute()
 
-            st.markdown("---")
-            st.subheader("📢 Generated Content")
+            st.subheader("📢 Content")
             st.write(output)
 
-            st.subheader("🔥 Promotional Offer Ideas")
+            # PDF
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            clean_text = output.encode('latin-1', 'ignore').decode('latin-1')
+            pdf.multi_cell(0, 10, txt=clean_text)
 
-            offer_prompt = f"""
-Business Details:
-{business_description}
+            pdf_output = pdf.output(dest='S').encode('latin-1')
 
-Generate 3 creative limited-time offers for this business.
-Make them catchy and realistic for Indian customers.
-"""
-
-            offers = generate_content(offer_prompt)
-            st.write(offers)
-
-            try:
-                pdf = FPDF()
-                pdf.add_page()
-                pdf.set_font("Arial", size=12)
-
-                clean_text = (output + "\n\nOFFERS:\n" + offers).encode('latin-1', 'ignore').decode('latin-1')
-                pdf.multi_cell(0, 10, txt=clean_text)
-
-                pdf_output = pdf.output(dest='S').encode('latin-1')
-
-                st.download_button(
-                    label="Download as PDF 📄",
-                    data=pdf_output,
-                    file_name="marketing_content.pdf",
-                    mime="application/pdf"
-                )
-            except:
-                st.warning("PDF generation failed, but content is available above!")
+            st.download_button(
+                "Download PDF",
+                data=pdf_output,
+                file_name="content.pdf",
+                mime="application/pdf"
+            )
 
 st.markdown("---")
-st.info("You can generate up to 3 times every 5 hours.")
+st.info("Free plan: 3 uses every 5 hours")
