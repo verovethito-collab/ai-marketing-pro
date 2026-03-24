@@ -15,7 +15,7 @@ Make them catchy and realistic for Indian customers.
 """
 
 offers = generate_content(business_description, "Ad Copy")
-st.write(offers)
+    st.write(offers)
     st.markdown("[📧 Contact the Developer](mailto:yourname@example.com)")
     st.markdown("---")
     st.write("🙏 If this helped you, consider supporting:")
