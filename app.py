@@ -13,10 +13,48 @@ with st.sidebar:
 API_KEY = st.secrets["GROQ_API_KEY"]
 def generate_content(business, choice):
     prompts = {
-        "Instagram": f"Generate 3 punchy Instagram captions with emojis for: {business}",
-        "WhatsApp": f"Write a short, friendly WhatsApp promotional message for: {business}",
-        "Email": f"Write a professional, high-converting cold email for: {business}",
-        "Ad Copy": f"Write a catchy, persuasive advertisement copy for: {business}"
+        prompts = {
+    "Instagram": f"""
+You are an expert social media marketer.
+
+Business Details:
+{business}
+
+Task:
+Generate 3 high-converting Instagram captions.
+- Use emojis
+- Add strong call-to-action
+- Make it engaging
+- Keep Indian audience in mind
+""",
+
+    "WhatsApp": f"""
+Write a WhatsApp promotional message for:
+{business}
+
+- Keep it friendly and short
+- Add urgency
+- Make it feel personal
+""",
+
+    "Email": f"""
+Write a professional cold email for:
+{business}
+
+- Strong subject line
+- Clear value proposition
+- Persuasive CTA
+""",
+
+    "Ad Copy": f"""
+Write a high-converting ad copy for:
+{business}
+
+- Attention-grabbing hook
+- Problem + solution
+- Strong CTA
+"""
+}
     }
     
     prompt = prompts.get(choice)
@@ -46,7 +84,16 @@ def generate_content(business, choice):
 st.set_page_config(page_title="AI Marketing Pro")
 st.title("🚀 AI Marketing Content Generator")
 
-business_description = st.text_area("Describe your business:")
+business_name = st.text_input("Business Name")
+business_type = st.selectbox("Business Type", ["Gym", "Cafe", "Salon", "Clothing Store", "Other"])
+target_audience = st.text_input("Target Audience")
+tone = st.selectbox("Tone", ["Funny", "Professional", "Luxury", "Local Hinglish"])
+
+business_description = f"""
+Name: {business_name}
+Type: {business_type}
+Audience: {target_audience}
+"""
 content_type = st.selectbox("Type:", ["Instagram", "WhatsApp", "Email", "Ad Copy"])
 
 if st.button("Generate ✨"):
