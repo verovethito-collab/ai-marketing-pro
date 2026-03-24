@@ -121,7 +121,7 @@ Write a high-converting advertisement:
     return prompt
 
 if st.session_state.usage_count >= 3:
-    st.warning("🚀 Free limit reached! Contact for unlimited access.")
+    st.warning("🚀 Free limit reached! Pay ₹199 to unlock unlimited access.")
     st.stop()
 
 if st.button("Generate ✨"):
@@ -176,14 +176,20 @@ Make them catchy and realistic for Indian customers.
 
 st.markdown("---")
 
-st.subheader("💼 Want Unlimited Content?")
-st.markdown("""
-- Unlimited generations  
-- Higher quality outputs  
-- Custom marketing strategies  
+st.subheader("💼 Unlock Unlimited Access")
 
-📩 Contact: verovethito@gmail.com  
-💰 ₹199/month (limited offer)
+st.markdown("""
+Get full access to unlimited content generation.
+
+- Unlimited usage  
+- Better outputs  
+- Priority features  
+""")
+
+st.link_button("💰 Pay ₹199 Now", "https://rzp.io/l/yourlink")
+
+st.markdown("""
+After payment, send screenshot on WhatsApp or Email to activate premium.
 """)
 
 st.subheader("🔥 Done-For-You Marketing")
@@ -194,7 +200,7 @@ We create complete marketing for your business:
 - Ads & campaigns  
 - WhatsApp promotions  
 
-📩 DM or Email to get started
+📩 Contact to get started
 """)
 
 st.markdown("---")
