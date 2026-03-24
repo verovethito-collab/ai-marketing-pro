@@ -33,9 +33,8 @@ if st.button("Try Demo"):
     st.session_state.business_name = "Iron Pulse Gym"
     st.session_state.target_audience = "Young professionals"
 
-# API keys
+# API + DB
 API_KEY = st.secrets["GROQ_API_KEY"]
-
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
@@ -70,7 +69,7 @@ Tone: {tone}
 st.markdown("---")
 user_email = st.text_input("Enter your email (required)")
 
-# DB functions
+# DB function (FIXED)
 def get_or_create_user(email):
     response = supabase.table("users").select("*").eq("email", email).execute()
 
@@ -79,7 +78,8 @@ def get_or_create_user(email):
     else:
         new_user = {
             "email": email,
-            "usage_count": 0
+            "usage_count": 0,
+            "last_used": datetime.datetime.utcnow().isoformat()
         }
         insert = supabase.table("users").insert(new_user).execute()
         return insert.data[0]
@@ -154,7 +154,7 @@ Write a high-converting advertisement:
 
     return prompt
 
-# Generate button
+# Generate
 if st.button("Generate ✨"):
     if not business_name or not target_audience:
         st.error("Please fill all required fields!")
@@ -168,7 +168,6 @@ if st.button("Generate ✨"):
 
         now = datetime.datetime.utcnow()
 
-        # Safe handling
         if last_used:
             last_time = datetime.datetime.fromisoformat(last_used.replace("Z", ""))
         else:
@@ -176,7 +175,6 @@ if st.button("Generate ✨"):
 
         time_diff = (now - last_time).total_seconds()
 
-        # Limit logic
         if usage >= 3 and time_diff < 5 * 60 * 60:
             remaining = int((5 * 60 * 60 - time_diff) / 60)
             st.warning(f"🚀 Limit reached! Come back in {remaining} minutes.")
@@ -189,7 +187,6 @@ if st.button("Generate ✨"):
             prompt = build_prompt(business_description, content_type, tone)
             output = generate_content(prompt)
 
-            # Update DB
             supabase.table("users").update({
                 "usage_count": usage + 1,
                 "last_used": now.isoformat()
