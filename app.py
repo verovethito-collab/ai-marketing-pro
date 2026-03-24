@@ -30,9 +30,8 @@ if st.button("Try Demo"):
     st.session_state.target_audience = "Young professionals"
 
 API_KEY = st.secrets["GROQ_API_KEY"]
-SUPABASE_URL = st.secrets["https://crqorpkfoneuqnjedlua.supabase.co"]
-SUPABASE_KEY = st.secrets["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNycW9ycGtmb25ldXFuamVkbHVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjMwMTMsImV4cCI6MjA4OTkzOTAxM30.oSyJyfgoDkabjEuJL5sg_l5xXpmvqlBp7uGQdZFBk7Y"]
-
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.subheader("📌 Enter Business Details")
