@@ -1,16 +1,11 @@
 from fpdf import FPDF
 import streamlit as st
 import requests
+import time
 
 with st.sidebar:
     st.title("🛠️ AI Marketing Hub")
     st.info("Generate high-converting marketing content in seconds.")
-    st.markdown("---")
-    st.subheader("Need a custom AI tool?")
-    st.markdown("[📧 Contact the Developer](mailto:yourname@example.com)")
-    st.markdown("---")
-    st.write("🙏 Support this project:")
-    st.markdown("[☕ Buy me a coffee](https://www.buymeacoffee.com/)")
 
 st.set_page_config(page_title="AI Marketing Pro", layout="centered")
 
@@ -46,11 +41,20 @@ Tone: {tone}
 """
 
 st.markdown("---")
-st.subheader("📩 Get More Marketing Ideas")
 user_email = st.text_input("Enter your email (optional)")
 
 if "usage_count" not in st.session_state:
     st.session_state.usage_count = 0
+
+if "last_reset" not in st.session_state:
+    st.session_state.last_reset = time.time()
+
+current_time = time.time()
+elapsed_time = current_time - st.session_state.last_reset
+
+if elapsed_time > 5 * 60 * 60:
+    st.session_state.usage_count = 0
+    st.session_state.last_reset = current_time
 
 def generate_content(prompt):
     try:
@@ -121,7 +125,8 @@ Write a high-converting advertisement:
     return prompt
 
 if st.session_state.usage_count >= 3:
-    st.warning("🚀 Free limit reached! Pay ₹199 to unlock unlimited access.")
+    remaining = int((5 * 60 * 60 - elapsed_time) / 60)
+    st.warning(f"🚀 Free limit reached! Come back in {remaining} minutes.")
     st.stop()
 
 if st.button("Generate ✨"):
@@ -175,33 +180,4 @@ Make them catchy and realistic for Indian customers.
                 st.warning("PDF generation failed, but content is available above!")
 
 st.markdown("---")
-
-st.subheader("💼 Unlock Unlimited Access")
-
-st.markdown("""
-Get full access to unlimited content generation.
-
-- Unlimited usage  
-- Better outputs  
-- Priority features  
-""")
-
-st.link_button("💰 Pay ₹199 Now", "https://rzp.io/l/yourlink")
-
-st.markdown("""
-After payment, send screenshot on WhatsApp or Email to activate premium.
-""")
-
-st.subheader("🔥 Done-For-You Marketing")
-st.markdown("""
-We create complete marketing for your business:
-
-- Instagram content  
-- Ads & campaigns  
-- WhatsApp promotions  
-
-📩 Contact to get started
-""")
-
-st.markdown("---")
-st.info("🚀 Coming soon: Content calendar, auto-posting, and viral analytics")
+st.info("You can generate up to 3 times every 5 hours.")
