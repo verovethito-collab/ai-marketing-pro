@@ -1,7 +1,8 @@
 from fpdf import FPDF
 import streamlit as st
 import requests
-import time
+import datetime
+from supabase import create_client
 
 with st.sidebar:
     st.title("🛠️ AI Marketing Hub")
@@ -30,6 +31,11 @@ if st.button("Try Demo"):
 
 API_KEY = st.secrets["GROQ_API_KEY"]
 
+SUPABASE_URL = st.secrets["https://crqorpkfoneuqnjedlua.supabase.co"]
+SUPABASE_KEY = st.secrets["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNycW9ycGtmb25ldXFuamVkbHVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjMwMTMsImV4cCI6MjA4OTkzOTAxM30.oSyJyfgoDkabjEuJL5sg_l5xXpmvqlBp7uGQdZFBk7Y"]
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 st.subheader("📌 Enter Business Details")
 
 business_name = st.text_input("Business Name", value=st.session_state.get("business_name", ""))
@@ -56,20 +62,20 @@ Tone: {tone}
 """
 
 st.markdown("---")
-user_email = st.text_input("Enter your email (optional)")
+user_email = st.text_input("Enter your email (required)")
 
-if "usage_count" not in st.session_state:
-    st.session_state.usage_count = 0
+def get_or_create_user(email):
+    response = supabase.table("users").select("*").eq("email", email).execute()
 
-if "last_reset" not in st.session_state:
-    st.session_state.last_reset = time.time()
-
-current_time = time.time()
-elapsed_time = current_time - st.session_state.last_reset
-
-if elapsed_time > 5 * 60 * 60:
-    st.session_state.usage_count = 0
-    st.session_state.last_reset = current_time
+    if response.data:
+        return response.data[0]
+    else:
+        new_user = {
+            "email": email,
+            "usage_count": 0
+        }
+        insert = supabase.table("users").insert(new_user).execute()
+        return insert.data[0]
 
 def generate_content(prompt):
     try:
@@ -139,24 +145,38 @@ Write a high-converting advertisement:
 
     return prompt
 
-if st.session_state.usage_count >= 3:
-    remaining = int((5 * 60 * 60 - elapsed_time) / 60)
-    st.warning(f"🚀 Limit reached! Come back in {remaining} minutes to generate more content.")
-    st.stop()
-
 if st.button("Generate ✨"):
     if not business_name or not target_audience:
         st.error("Please fill all required fields!")
+    elif not user_email:
+        st.error("Email is required!")
     else:
-        if user_email:
-            with open("leads.txt", "a") as f:
-                f.write(user_email + "\n")
+        user = get_or_create_user(user_email)
+
+        usage = user["usage_count"]
+        last_used = user["last_used"]
+
+        now = datetime.datetime.utcnow()
+        last_time = datetime.datetime.fromisoformat(last_used.replace("Z", ""))
+
+        time_diff = (now - last_time).total_seconds()
+
+        if usage >= 3 and time_diff < 5 * 60 * 60:
+            remaining = int((5 * 60 * 60 - time_diff) / 60)
+            st.warning(f"🚀 Limit reached! Come back in {remaining} minutes.")
+            st.stop()
+
+        if time_diff >= 5 * 60 * 60:
+            usage = 0
 
         with st.spinner("Generating content..."):
             prompt = build_prompt(business_description, content_type, tone)
             output = generate_content(prompt)
 
-            st.session_state.usage_count += 1
+            supabase.table("users").update({
+                "usage_count": usage + 1,
+                "last_used": now.isoformat()
+            }).eq("email", user_email).execute()
 
             st.markdown("---")
             st.subheader("📢 Generated Content")
