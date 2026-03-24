@@ -1,72 +1,51 @@
 from fpdf import FPDF
 import streamlit as st
 import requests
+
 with st.sidebar:
     st.title("🛠️ AI Marketing Hub")
-    st.info("This tool uses Llama 3.3 to generate high-converting copy in seconds.")
+    st.info("Generate high-converting marketing content in seconds.")
     st.markdown("---")
-    st.subheader("🔥 Promotional Offer Ideas")
-
-offer_prompt = f"""
-Generate 3 limited-time offers for this business:
-{business_description}
-
-Make them catchy and realistic for Indian customers.
-"""
-
-offers = generate_content(business_description, "Ad Copy")
-    st.write(offers)
+    st.subheader("Need a custom AI tool?")
     st.markdown("[📧 Contact the Developer](mailto:yourname@example.com)")
     st.markdown("---")
-    st.write("🙏 If this helped you, consider supporting:")
+    st.write("🙏 Support this project:")
     st.markdown("[☕ Buy me a coffee](https://www.buymeacoffee.com/)")
+
+st.set_page_config(page_title="AI Marketing Pro", layout="centered")
+
+st.title("🚀 AI Marketing Pro")
+st.caption("Create high-converting content for your business instantly")
+st.markdown("---")
+
 API_KEY = st.secrets["GROQ_API_KEY"]
-def generate_content(business, choice):
-    prompts = {
-    "Instagram": f"""
-You are an expert social media marketer.
 
-Business Details:
-{business}
+st.subheader("📌 Enter Business Details")
 
-Task:
-Generate 3 high-converting Instagram captions.
-- Use emojis
-- Add strong call-to-action
-- Make it engaging
-- Keep Indian audience in mind
-""",
+business_name = st.text_input("Business Name")
+business_type = st.selectbox(
+    "Business Type",
+    ["Gym", "Cafe", "Salon", "Clothing Store", "Restaurant", "Other"]
+)
+target_audience = st.text_input("Target Audience")
+tone = st.selectbox(
+    "Tone",
+    ["Funny", "Professional", "Luxury", "Local Hinglish"]
+)
 
-    "WhatsApp": f"""
-Write a WhatsApp promotional message for:
-{business}
+content_type = st.selectbox(
+    "Content Type",
+    ["Instagram", "WhatsApp", "Email", "Ad Copy"]
+)
 
-- Keep it friendly and short
-- Add urgency
-- Make it feel personal
-""",
-
-    "Email": f"""
-Write a professional cold email for:
-{business}
-
-- Strong subject line
-- Clear value proposition
-- Persuasive CTA
-""",
-
-    "Ad Copy": f"""
-Write a high-converting ad copy for:
-{business}
-
-- Attention-grabbing hook
-- Problem + solution
-- Strong CTA
+business_description = f"""
+Business Name: {business_name}
+Business Type: {business_type}
+Target Audience: {target_audience}
+Tone: {tone}
 """
-    }
-    
-    prompt = prompts.get(choice)
-    
+
+def generate_content(prompt):
     try:
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
@@ -75,8 +54,8 @@ Write a high-converting ad copy for:
                 "model": "llama-3.3-70b-versatile",
                 "messages": [
                     {
-                        "role": "system", 
-                        "content": "You are an elite Digital Marketing Strategist. Your copy is high-converting and punchy."
+                        "role": "system",
+                        "content": "You are an elite Digital Marketing Strategist. Your copy is high-converting, engaging, and persuasive."
                     },
                     {"role": "user", "content": prompt}
                 ],
@@ -89,45 +68,94 @@ Write a high-converting ad copy for:
     except Exception as e:
         return f"Error: {e}"
 
-st.set_page_config(page_title="AI Marketing Pro")
-st.title("🚀 AI Marketing Content Generator")
-
-business_name = st.text_input("Business Name")
-business_type = st.selectbox("Business Type", ["Gym", "Cafe", "Salon", "Clothing Store", "Other"])
-target_audience = st.text_input("Target Audience")
-tone = st.selectbox("Tone", ["Funny", "Professional", "Luxury", "Local Hinglish"])
-
-business_description = f"""
-Name: {business_name}
-Type: {business_type}
-Audience: {target_audience}
+def build_prompt(business, content_type, tone):
+    base = f"""
+Business Details:
+{business}
 """
-content_type = st.selectbox("Type:", ["Instagram", "WhatsApp", "Email", "Ad Copy"])
+
+    if content_type == "Instagram":
+        prompt = base + """
+Generate 3 high-converting Instagram captions:
+- Use emojis
+- Add strong call-to-action
+- Make it engaging and trendy
+- Keep Indian audience in mind
+"""
+
+    elif content_type == "WhatsApp":
+        prompt = base + """
+Write a short WhatsApp promotional message:
+- Friendly and personal tone
+- Create urgency
+- Add CTA
+"""
+
+    elif content_type == "Email":
+        prompt = base + """
+Write a professional marketing email:
+- Include subject line
+- Clear value proposition
+- Persuasive CTA
+"""
+
+    elif content_type == "Ad Copy":
+        prompt = base + """
+Write a high-converting advertisement:
+- Strong hook
+- Problem + solution
+- Emotional trigger
+- Clear CTA
+"""
+
+    if tone == "Local Hinglish":
+        prompt += "\nUse Hinglish (mix Hindi + English) naturally."
+
+    return prompt
 
 if st.button("Generate ✨"):
-    if not business_description:
-        st.error("Enter a description!")
+    if not business_name or not target_audience:
+        st.error("Please fill all required fields!")
     else:
-        with st.spinner("Writing..."):
-            output = generate_content(business_description, content_type)
+        with st.spinner("Generating content..."):
+            prompt = build_prompt(business_description, content_type, tone)
+            output = generate_content(prompt)
+
             st.markdown("---")
+            st.subheader("📢 Generated Content")
             st.write(output)
+
+            st.subheader("🔥 Promotional Offer Ideas")
+
+            offer_prompt = f"""
+Business Details:
+{business_description}
+
+Generate 3 creative limited-time offers for this business.
+Make them catchy and realistic for Indian customers.
+"""
+
+            offers = generate_content(offer_prompt)
+            st.write(offers)
+
             try:
                 pdf = FPDF()
                 pdf.add_page()
                 pdf.set_font("Arial", size=12)
-                # Clean text to avoid encoding errors in PDF
-                clean_text = output.encode('latin-1', 'ignore').decode('latin-1')
+
+                clean_text = (output + "\n\nOFFERS:\n" + offers).encode('latin-1', 'ignore').decode('latin-1')
                 pdf.multi_cell(0, 10, txt=clean_text)
-                
+
                 pdf_output = pdf.output(dest='S').encode('latin-1')
-                
+
                 st.download_button(
                     label="Download as PDF 📄",
                     data=pdf_output,
-                    file_name="marketing_copy.pdf",
+                    file_name="marketing_content.pdf",
                     mime="application/pdf"
                 )
-            except Exception as pdf_err:
-                st.warning("PDF could not be generated, but you can still copy the text above!")
-## Final Reminder
+            except:
+                st.warning("PDF generation failed, but content is available above!")
+
+st.markdown("---")
+st.info("🚀 Coming soon: Content calendar, auto-posting, and viral analytics")
