@@ -57,3 +57,19 @@ if st.button("Generate ✨"):
             output = generate_content(business_description, content_type)
             st.markdown("---")
             st.write(output)
+try:
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", size=12)
+                # Clean text to avoid encoding errors in PDF
+                clean_text = output.encode('latin-1', 'ignore').decode('latin-1')
+                pdf.multi_cell(0, 10, txt=clean_text)
+                
+                pdf_output = pdf.output(dest='S').encode('latin-1')
+                
+                st.download_button(
+                    label="Download as PDF 📄",
+                    data=pdf_output,
+                    file_name="marketing_copy.pdf",
+                    mime="application/pdf"
+                )
