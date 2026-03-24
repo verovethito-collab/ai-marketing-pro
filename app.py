@@ -1,6 +1,14 @@
 import streamlit as st
 import requests
-
+with st.sidebar:
+    st.title("🛠️ AI Marketing Hub")
+    st.info("This tool uses Llama 3.3 to generate high-converting copy in seconds.")
+    st.markdown("---")
+    st.subheader("Need a custom AI tool?")
+    st.markdown("[📧 Contact the Developer](mailto:yourname@example.com)")
+    st.markdown("---")
+    st.write("🙏 If this helped you, consider supporting:")
+    st.markdown("[☕ Buy me a coffee](https://www.buymeacoffee.com/)")
 API_KEY = st.secrets["GROQ_API_KEY"]
 def generate_content(business, choice):
     prompts = {
