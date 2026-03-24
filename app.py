@@ -9,20 +9,35 @@ with st.sidebar:
 
 st.set_page_config(page_title="AI Marketing Pro", layout="centered")
 
-st.title("🚀 AI Marketing Pro")
-st.caption("Create high-converting content for your business instantly")
+st.title("🚀 AI Marketing for Local Businesses")
+st.caption("Get Instagram posts, WhatsApp promos & offers in seconds")
 st.markdown("---")
+
+st.subheader("💡 Example Output")
+st.code("""
+🔥 Get Fit This Summer at Iron Pulse Gym!
+
+No more excuses 💪 Join now and transform your body with expert trainers.
+
+Limited offer: 20% OFF for first 50 members!
+
+📩 DM us today!
+""")
+
+if st.button("Try Demo"):
+    st.session_state.business_name = "Iron Pulse Gym"
+    st.session_state.target_audience = "Young professionals"
 
 API_KEY = st.secrets["GROQ_API_KEY"]
 
 st.subheader("📌 Enter Business Details")
 
-business_name = st.text_input("Business Name")
+business_name = st.text_input("Business Name", value=st.session_state.get("business_name", ""))
 business_type = st.selectbox(
     "Business Type",
     ["Gym", "Cafe", "Salon", "Clothing Store", "Restaurant", "Other"]
 )
-target_audience = st.text_input("Target Audience")
+target_audience = st.text_input("Target Audience", value=st.session_state.get("target_audience", ""))
 tone = st.selectbox(
     "Tone",
     ["Funny", "Professional", "Luxury", "Local Hinglish"]
@@ -126,7 +141,7 @@ Write a high-converting advertisement:
 
 if st.session_state.usage_count >= 3:
     remaining = int((5 * 60 * 60 - elapsed_time) / 60)
-    st.warning(f"🚀 Free limit reached! Come back in {remaining} minutes.")
+    st.warning(f"🚀 Limit reached! Come back in {remaining} minutes to generate more content.")
     st.stop()
 
 if st.button("Generate ✨"):
