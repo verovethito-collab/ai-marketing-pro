@@ -1,3 +1,4 @@
+from fpdf import FPDF
 import streamlit as st
 import requests
 with st.sidebar:
@@ -7,11 +8,13 @@ with st.sidebar:
     st.subheader("Need a custom AI tool?")
     st.markdown("[📧 Contact the Developer](mailto:yourname@example.com)")
     st.markdown("---")
-    st.write("🙏 If this helped you, consider supporting:")
-    pdf = FPDF()
+    st.write("🙏 If this helped you, consider supporting:"
+            pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
-        pdf.multi_cell(0, 10, txt=output)
+        # This cleans up the text for the PDF format
+        clean_text = output.encode('latin-1', 'ignore').decode('latin-1')
+        pdf.multi_cell(0, 10, txt=clean_text)
         
         # Create the download button
         pdf_output = pdf.output(dest='S').encode('latin-1')
@@ -19,8 +22,7 @@ with st.sidebar:
             label="Download as PDF 📄",
             data=pdf_output,
             file_name="marketing_copy.pdf",
-            mime="application/pdf"
-        )
+            mime="application/pdf")
     st.markdown("[☕ Buy me a coffee](https://www.buymeacoffee.com/)")
 API_KEY = st.secrets["GROQ_API_KEY"]
 def generate_content(business, choice):
