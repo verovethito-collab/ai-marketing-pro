@@ -4,16 +4,19 @@ import requests
 import datetime
 from supabase import create_client
 
+# Sidebar
 with st.sidebar:
     st.title("🛠️ AI Marketing Hub")
     st.info("Generate high-converting marketing content in seconds.")
 
 st.set_page_config(page_title="AI Marketing Pro", layout="centered")
 
+# Header
 st.title("🚀 AI Marketing for Local Businesses")
 st.caption("Get Instagram posts, WhatsApp promos & offers in seconds")
 st.markdown("---")
 
+# Example
 st.subheader("💡 Example Output")
 st.code("""
 🔥 Get Fit This Summer at Iron Pulse Gym!
@@ -25,15 +28,20 @@ Limited offer: 20% OFF for first 50 members!
 📩 DM us today!
 """)
 
+# Demo button
 if st.button("Try Demo"):
     st.session_state.business_name = "Iron Pulse Gym"
     st.session_state.target_audience = "Young professionals"
 
+# API keys
 API_KEY = st.secrets["GROQ_API_KEY"]
+
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# Inputs
 st.subheader("📌 Enter Business Details")
 
 business_name = st.text_input("Business Name", value=st.session_state.get("business_name", ""))
@@ -62,6 +70,7 @@ Tone: {tone}
 st.markdown("---")
 user_email = st.text_input("Enter your email (required)")
 
+# DB functions
 def get_or_create_user(email):
     response = supabase.table("users").select("*").eq("email", email).execute()
 
@@ -75,6 +84,7 @@ def get_or_create_user(email):
         insert = supabase.table("users").insert(new_user).execute()
         return insert.data[0]
 
+# AI function
 def generate_content(prompt):
     try:
         response = requests.post(
@@ -98,6 +108,7 @@ def generate_content(prompt):
     except Exception as e:
         return f"Error: {e}"
 
+# Prompt builder
 def build_prompt(business, content_type, tone):
     base = f"""
 Business Details:
@@ -143,6 +154,7 @@ Write a high-converting advertisement:
 
     return prompt
 
+# Generate button
 if st.button("Generate ✨"):
     if not business_name or not target_audience:
         st.error("Please fill all required fields!")
@@ -152,13 +164,19 @@ if st.button("Generate ✨"):
         user = get_or_create_user(user_email)
 
         usage = user["usage_count"]
-        last_used = user["last_used"]
+        last_used = user.get("last_used")
 
         now = datetime.datetime.utcnow()
-        last_time = datetime.datetime.fromisoformat(last_used.replace("Z", ""))
+
+        # Safe handling
+        if last_used:
+            last_time = datetime.datetime.fromisoformat(last_used.replace("Z", ""))
+        else:
+            last_time = now
 
         time_diff = (now - last_time).total_seconds()
 
+        # Limit logic
         if usage >= 3 and time_diff < 5 * 60 * 60:
             remaining = int((5 * 60 * 60 - time_diff) / 60)
             st.warning(f"🚀 Limit reached! Come back in {remaining} minutes.")
@@ -171,6 +189,7 @@ if st.button("Generate ✨"):
             prompt = build_prompt(business_description, content_type, tone)
             output = generate_content(prompt)
 
+            # Update DB
             supabase.table("users").update({
                 "usage_count": usage + 1,
                 "last_used": now.isoformat()
